@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,6 +12,13 @@ import (
 )
 
 func parser_start(path string) error {
+
+	//initalize tick struck
+
+	tick := Tick{
+		Players: make(map[uint64]Player_info),
+	}
+	fmt.Println(tick)
 	//This is going to use the demoinfo-cs library
 	f, _ := os.Open(path)
 	defer f.Close()
@@ -47,7 +55,7 @@ func parser_start(path string) error {
 		}
 
 		//this is where the fun starts :)
-		test_players(&gs)
+		test_players(gs)
 	}
 
 	return nil
