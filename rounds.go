@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
@@ -18,6 +20,8 @@ func get_rounds_info(gs demoinfocs.GameState, tick *Tick) Tick {
 
 func round_start_end(p demoinfocs.Parser, open_round *bool, sink RoundSink) {
 	p.RegisterEventHandler(func(e events.RoundStart) {
+
+		fmt.Println("Here in start")
 		*open_round = true
 
 		var (
@@ -60,10 +64,7 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, sink RoundSink) {
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		*open_round = false
-	})
-
-	p.RegisterEventHandler(func(e events.ScoreUpdated) {
+		fmt.Println("Here in end")
 		*open_round = false
 	})
 
