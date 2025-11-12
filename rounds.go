@@ -18,17 +18,16 @@ func get_rounds_info(gs demoinfocs.GameState, tick *Tick) Tick {
 	return *tick
 }
 
-func round_start_end(p demoinfocs.Parser, open_round *bool, sink RoundSink) {
+func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match) {
+	var (
+		tScore    int
+		ctScore   int
+		round_num int
+	)
+	var info RoundInfo
+
 	p.RegisterEventHandler(func(e events.RoundStart) {
-
-		fmt.Println("Here in start")
 		*open_round = true
-
-		var (
-			tScore    int
-			ctScore   int
-			round_num int
-		)
 
 		//this is messy wtf will refactor later if I don't forget since it will be messier later
 		gs := p.GameState()
@@ -40,8 +39,6 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, sink RoundSink) {
 			if t := gs.TeamTerrorists(); t != nil {
 				tScore = t.Score()
 			}
-
-			var info RoundInfo
 			ctMoney := 0
 			tMoney := 0
 			for _, p := range gs.Participants().TeamMembers(common.TeamCounterTerrorists) {
@@ -66,6 +63,7 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, sink RoundSink) {
 	p.RegisterEventHandler(func(e events.RoundEnd) {
 		fmt.Println("Here in end")
 		*open_round = false
+		m.StoreRoundInfo(round_num, *m.CurrentRound)
 	})
 
 }

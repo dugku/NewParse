@@ -1,11 +1,23 @@
 package main
 
-import "github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
+import (
+	"time"
 
-type RoundSink interface {
-	StoreRoundInfo(round int, info RoundInfo) error
-	CaptureFrame(tick Tick) error
-	//Think of end later right now just store rounds
+	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
+)
+
+type MatchSink interface {
+	StoreRoundInfo(round int, info RoundInfo)
+	SeeFrame(tick Tick)
+}
+
+type RoundCap interface {
+	CaptureFrame(ini RoundInfo, tick Tick)
+}
+
+type Match struct {
+	Rounds       []RoundInfo
+	CurrentRound *RoundInfo
 }
 
 type Tick struct {
@@ -17,6 +29,7 @@ type Tick struct {
 	IsMatchStarted bool                   `json:"is_match_started"`
 	GamePhase      string                 `json:"game_phase"`
 	Players        map[uint64]Player_info `json:"players"`
+	Nades          []Nades                `json:"nades"`
 }
 
 // What are the poperties of a player?
@@ -32,13 +45,19 @@ type Player_info struct {
 	Entity_id int                       `json:"entity_id"`
 	Defusing  bool                      `json:"defusing"`
 	HasHel    bool                      `json:"has_helmet"`
-	Position  Position_Player           `json:"position"`
+	Position  Position                  `json:"position_pl"`
 }
 
-type Position_Player struct {
+type Position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
+}
+
+type Velocityy struct {
+	VX float64
+	VY float64
+	VZ float64
 }
 
 // Will need to really think about this since
@@ -55,6 +74,17 @@ type RoundInfo struct {
 
 	Ticks []Tick
 	//Get more Later concept for now
+}
+
+type Nades struct {
+	EId       common.EquipmentClass
+	Type      *common.Equipment
+	Pos       Position
+	TimeInSec time.Duration
+	//Vel       Velocityy
+}
+
+type DmgDone struct {
 }
 
 // More structs can be added here to hold additional information as needed

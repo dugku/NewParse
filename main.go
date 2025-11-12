@@ -11,15 +11,18 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/msg"
 )
 
-func parser_start(path string, sink RoundSink) error {
-
+func parser_start(path string, m *Match) error {
 	//initalize tick struck
 	var round_open bool
 	//This is going to use the demoinfo-cs library
 	f, _ := os.Open(path)
 	defer f.Close()
 
-	p := demoinfocs.NewParser(f)
+	config := demoinfocs.ParserConfig{
+		IgnorePacketEntitiesPanic: true,
+	}
+
+	p := demoinfocs.NewParserWithConfig(f, config)
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -36,7 +39,7 @@ func parser_start(path string, sink RoundSink) error {
 	//need a way to store lots of ticks huge slie..?
 	//ticks_data := make([]Tick, 0)
 
-	round_start_end(p, &round_open, sink)
+	round_start_end(p, &round_open, m)
 	for {
 		more, err := p.ParseNextFrame()
 		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, demoinfocs.ErrUnexpectedEndOfDemo) {
@@ -44,7 +47,6 @@ func parser_start(path string, sink RoundSink) error {
 		}
 
 		if !more || errors.Is(err, io.EOF) {
-			fmt.Print("Here")
 			break
 		}
 		if round_open {
@@ -52,23 +54,31 @@ func parser_start(path string, sink RoundSink) error {
 				Tick_number: p.GameState().IngameTick(),
 				Time_in_sec: 0,
 
-				Players: make(map[uint64]Player_info),
+				Players: make(map[uint64]Player_info, 10),
+				Nades:   make([]Nades, 0),
 			}
 			gs := p.GameState()
-
 			if gs != nil {
-
 				test_players(gs, &tick_current)
-
+				nades(gs, &tick_current, p)
+				if m == nil {
+					log.Println("Sink is nil not good")
+				} else {
+					m.SeeFrame(tick_current)
+				}
+				fmt.Println(tick_current.Nades)
 			}
 		}
 	}
 
 	return nil
-
 }
 
 func main() {
-	var m RoundSink
-	parser_start("spirit-vs-the-mongolz-m1-dust2.dem", m)
+	var m Match
+	m = Match{
+		Rounds:       make([]RoundInfo, 0),
+		CurrentRound: &RoundInfo{},
+	}
+	parser_start("furia-vs-mouz-m1-inferno.dem", &m)
 }
