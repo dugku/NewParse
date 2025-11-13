@@ -54,7 +54,7 @@ func parser_start(path string, m *Match) error {
 				Tick_number: p.GameState().IngameTick(),
 				Time_in_sec: 0,
 
-				Players: make(map[uint64]Player_info, 10),
+				Players: make(map[uint64]*Player_info, 10),
 				Nades:   make([]Nades, 0),
 			}
 			gs := p.GameState()
@@ -66,7 +66,9 @@ func parser_start(path string, m *Match) error {
 				} else {
 					m.SeeFrame(tick_current)
 				}
-				fmt.Println(tick_current.Nades)
+				for _, i := range tick_current.Players {
+					fmt.Println(i)
+				}
 			}
 		}
 	}

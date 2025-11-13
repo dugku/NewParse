@@ -24,28 +24,52 @@ type Tick struct {
 	Tick_number int     `json:"tick_number"`
 	Time_in_sec float32 `json:"time_in_sec"`
 
-	IsFreezetime   bool                   `json:"is_freezetime"`
-	IsWarmup       bool                   `json:"is_warmup"`
-	IsMatchStarted bool                   `json:"is_match_started"`
-	GamePhase      string                 `json:"game_phase"`
-	Players        map[uint64]Player_info `json:"players"`
-	Nades          []Nades                `json:"nades"`
+	IsFreezetime   bool                    `json:"is_freezetime"`
+	IsWarmup       bool                    `json:"is_warmup"`
+	IsMatchStarted bool                    `json:"is_match_started"`
+	GamePhase      string                  `json:"game_phase"`
+	Players        map[uint64]*Player_info `json:"players"`
+	Nades          []Nades                 `json:"nades"`
 }
 
 // What are the poperties of a player?
 type Player_info struct {
-	Steam_id  uint64                    `json:"steam_id"`
-	Name      string                    `json:"name"`
-	Inventory map[int]*common.Equipment `json:"inventory"`
-	Money     int                       `json:"money"`
-	Health    int                       `json:"health"`
-	Armor     int                       `json:"armor"`
-	IsAlive   bool                      `json:"is_alive"`
-	Team      common.Team               `json:"team"`
-	Entity_id int                       `json:"entity_id"`
-	Defusing  bool                      `json:"defusing"`
-	HasHel    bool                      `json:"has_helmet"`
-	Position  Position                  `json:"position_pl"`
+	Name                  string                    `json:"name"`
+	Inventory             map[int]*common.Equipment `json:"inventory"`
+	Money                 int                       `json:"money"`
+	Health                int                       `json:"health"`
+	Armor                 int                       `json:"armor"`
+	IsAlive               bool                      `json:"is_alive"`
+	Team                  common.Team               `json:"team"`
+	Entity_id             int                       `json:"entity_id"`
+	Defusing              bool                      `json:"defusing"`
+	HasHel                bool                      `json:"has_helmet"`
+	Position              Position                  `json:"position_pl"`
+	ActiveWeapon          *common.Equipment         `json:"active_weapon"`
+	ActiveWeaponName      string                    `json:"active_weapon_name"`
+	AmmoInMag             int                       `json:"ammo_in_mag"`
+	AmmoInRes             int                       `json:"ammo_in_res" `
+	FlashDurTime          time.Duration             `json:"flash_dur_time"`
+	FlashDurTimeRemaining time.Duration             `json:"flash_dur_time_remaining"`
+	HasKit                bool                      `json:"has_defuse_kit"`
+	IsInAir               bool                      `json:"air_borne"`
+	IsBlind               bool                      `json:"is_blinded"`
+	InBombZone            bool                      `json:"in_bomb_zone"`
+	InBuyZone             bool                      `json:"in_buy_zone"`
+	IsScoped              bool                      `json:"is_scoped"`
+	Standing              bool                      `json:"is_standing"`
+	UnDuckingInProgress   bool                      `json:"un_ducking_in_prog"`
+	Walking               bool                      `json:"is_walking"`
+	LastPlace             string                    `json:"last_place_name"`
+	ViewDirX              float32                   `json:"view_dir_x"`
+	ViewDirY              float32                   `json:"view_dir_y"`
+	Ducked                bool                      `json:"is_ducking"`
+	FlashN                int8                      `json:"num_flashes"`
+	NadeN                 int8                      `json:"num_nades"`
+	SmokeN                int8                      `json:"num_smokes"`
+	MollyN                int8                      `json:"num_mollies"`
+	IncendiaryN           int8                      `json:"num_incindiary"`
+	DecoyN                int8                      `json:"num_decoys"`
 }
 
 type Position struct {

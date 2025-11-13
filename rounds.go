@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
@@ -61,7 +59,6 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match) {
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		fmt.Println("Here in end")
 		*open_round = false
 		m.StoreRoundInfo(round_num, *m.CurrentRound)
 	})
