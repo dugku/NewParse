@@ -16,17 +16,16 @@ func get_rounds_info(gs demoinfocs.GameState, tick *Tick) Tick {
 	return *tick
 }
 
-func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match) {
+func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match, c *int) {
 	var (
 		tScore    int
 		ctScore   int
 		round_num int
 	)
-	var info RoundInfo
+	m.CurrentRound = &RoundInfo{}
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		*open_round = true
-
 		//this is messy wtf will refactor later if I don't forget since it will be messier later
 		gs := p.GameState()
 		if gs != nil {
@@ -46,21 +45,28 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match) {
 			for _, p := range gs.Participants().TeamMembers(common.TeamTerrorists) {
 				tMoney += p.Money()
 			}
+			m.CurrentRound.Start_tick = gs.IngameTick()
+			m.CurrentRound.CTEcon = ctMoney
+			m.CurrentRound.TEcon = tMoney
+			m.CurrentRound.CTEquipmentVal = gs.TeamCounterTerrorists().CurrentEquipmentValue()
+			m.CurrentRound.TEquipmentVal = gs.TeamCounterTerrorists().CurrentEquipmentValue()
+			m.CurrentRound.CTScore = ctScore
+			m.CurrentRound.TScore = tScore
+			m.CurrentRound.Round_number = round_num
 
-			info.CTEcon = ctMoney
-			info.TEcon = tMoney
-			info.CTEquipmentVal = gs.TeamCounterTerrorists().CurrentEquipmentValue()
-			info.TEquipmentVal = gs.TeamCounterTerrorists().CurrentEquipmentValue()
-			info.CTScore = ctScore
-			info.TScore = tScore
-			info.Round_number = round_num
 		}
 
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
 		*open_round = false
+		gs := p.GameState()
+		if gs != nil {
+			m.CurrentRound.End_tick = gs.IngameTick()
+
+		}
 		m.StoreRoundInfo(round_num, *m.CurrentRound)
+		*c += 1
 	})
 
 }

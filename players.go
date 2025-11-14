@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
 )
 
 type NadeType int
@@ -40,10 +40,8 @@ func test_players(gs demoinfocs.GameState, tick *Tick) {
 func set_player(players []*common.Player, tick *Tick, gs demoinfocs.GameState) {
 	for _, p := range players {
 		if !p.IsAlive() || p == nil {
-			fmt.Println("Either Player is Dead or is nil")
-			continue
+			continue //would log this but parsing would take forever if I did
 		}
-
 		tick.Players[p.SteamID64] = &Player_info{
 			Name:      p.Name,
 			Inventory: make(map[int]*common.Equipment),
@@ -110,6 +108,56 @@ func set_player(players []*common.Player, tick *Tick, gs demoinfocs.GameState) {
 			}
 		}
 	}
+}
+
+func players_hurting(p demoinfocs.Parser, tick *Tick) {
+	p.RegisterEventHandler(func(e events.PlayerHurt) {
+		hurt := PlayerHurt{}
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovering in Player Hurt %v", r)
+			}
+		}()
+		if e.Player != nil {
+			hurt.PlayerSteamID = e.Player.SteamID64
+			hurt.PlayerName = e.Player.Name
+		} else {
+			hurt.PlayerName = "Unknown"
+			log.Printf("Warning: PlayerHurt event with nil player at tick %d", tick.Tick_number)
+		}
+
+		if e.Attacker != nil {
+			hurt.AttackerSteamID = e.Attacker.SteamID64
+			hurt.AttackerName = e.Attacker.Name
+		} else {
+			hurt.AttackerName = "World"
+		}
+
+		if e.Weapon != nil {
+			hurt.Weapon = WeaponType(e.Weapon.Type)
+			hurt.WeaponString = e.Weapon.String()
+		} else {
+			hurt.Weapon = WeaponUnknown
+			hurt.WeaponString = "Unknown"
+		}
+
+		hurt.Health = e.Health
+		hurt.Armor = e.Armor
+		hurt.HealthDamage = e.HealthDamage
+		hurt.ArmorDamage = e.ArmorDamage
+		hurt.HealthDamageTaken = e.HealthDamageTaken
+		hurt.ArmorDamageTaken = e.ArmorDamageTaken
+		hurt.HitGroup = HitGroup(e.HitGroup)
+
+		tick.PlayersHurt = append(tick.PlayersHurt, hurt)
+	})
+
+}
+
+func weapons_firing(p demoinfocs.Parser, tick *Tick) {
+	p.RegisterEventHandler(func(e events.WeaponFire) {
+
+	})
 }
 
 func check_team(t *common.TeamState) {

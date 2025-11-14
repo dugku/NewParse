@@ -14,6 +14,7 @@ import (
 func parser_start(path string, m *Match) error {
 	//initalize tick struck
 	var round_open bool
+	var counter int
 	//This is going to use the demoinfo-cs library
 	f, _ := os.Open(path)
 	defer f.Close()
@@ -39,7 +40,7 @@ func parser_start(path string, m *Match) error {
 	//need a way to store lots of ticks huge slie..?
 	//ticks_data := make([]Tick, 0)
 
-	round_start_end(p, &round_open, m)
+	round_start_end(p, &round_open, m, &counter)
 	for {
 		more, err := p.ParseNextFrame()
 		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, demoinfocs.ErrUnexpectedEndOfDemo) {
@@ -54,26 +55,43 @@ func parser_start(path string, m *Match) error {
 				Tick_number: p.GameState().IngameTick(),
 				Time_in_sec: 0,
 
-				Players: make(map[uint64]*Player_info, 10),
-				Nades:   make([]Nades, 0),
+				Players:     make(map[uint64]*Player_info, 10),
+				Nades:       make([]Nades, 0),
+				PlayersHurt: make([]PlayerHurt, 0),
+				WeaponFired: make([]Weaps_fired, 0),
 			}
 			gs := p.GameState()
 			if gs != nil {
 				test_players(gs, &tick_current)
 				nades(gs, &tick_current, p)
+				players_hurting(p, &tick_current)
+				weapons_firing(p, &tick_current)
 				if m == nil {
 					log.Println("Sink is nil not good")
 				} else {
 					m.SeeFrame(tick_current)
 				}
-				for _, i := range tick_current.Players {
-					fmt.Println(i)
-				}
+
 			}
+		}
+		if counter == 2 {
+			break
 		}
 	}
 
 	return nil
+}
+
+func frame(m *Match) {
+	fmt.Println("Here")
+	rounds := m.Rounds
+
+	for _, i := range rounds {
+		for _, j := range i.Ticks {
+			fmt.Println(j.PlayersHurt)
+		}
+
+	}
 }
 
 func main() {
@@ -82,5 +100,8 @@ func main() {
 		Rounds:       make([]RoundInfo, 0),
 		CurrentRound: &RoundInfo{},
 	}
-	parser_start("furia-vs-mouz-m1-inferno.dem", &m)
+	parser_start("spirit-vs-the-mongolz-m1-dust2.dem", &m)
+
+	frame(&m)
+
 }

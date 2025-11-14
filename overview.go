@@ -30,6 +30,113 @@ type Tick struct {
 	GamePhase      string                  `json:"game_phase"`
 	Players        map[uint64]*Player_info `json:"players"`
 	Nades          []Nades                 `json:"nades"`
+	WeaponFired    []Weaps_fired           `json:"weapons_fired"`
+	PlayersHurt    []PlayerHurt            `json:"players_hurt"`
+}
+
+type Weaps_fired struct {
+	PlayerShot *common.Player
+	Weap       *common.Equipment
+}
+
+type PlayerHurt struct {
+	PlayerSteamID     uint64     `json:"player_steam_id"`
+	AttackerSteamID   uint64     `json:"attacker_steam_id"`
+	PlayerName        string     `json:"player_name"`
+	AttackerName      string     `json:"attacker_name"`
+	Health            int        `json:"health"`
+	Armor             int        `json:"armor"`
+	Weapon            WeaponType `json:"weapon"`
+	WeaponString      string     `json:"weapon_string"`
+	HealthDamage      int        `json:"health_dmg"`       // Raw health damage before overkill
+	ArmorDamage       int        `json:"armor_dmg"`        // Raw armor damage before overkill
+	HealthDamageTaken int        `json:"health_dmg_taken"` // Actual health damage (after overkill)
+	ArmorDamageTaken  int        `json:"armor_dmg_taken"`  // Actual armor damage (after overkill)
+	HitGroup          HitGroup   `json:"hit_group"`        // Body part that was hit
+}
+
+type Bullet_dmg struct {
+	Attacker_Steam_Id  uint64  `json:"attacker_id_bullet"`
+	Attacker_name      string  `json:"attacker_name_bulltet"`
+	Victim_Steam_id    uint64  `json:"victim_id_bullet"`
+	Victim_name        string  `json:"victim_name_bullet"`
+	Dist               float32 `json:"distance"`
+	DmgDirX            float32 `json:"damage_direction_x"`
+	DmgDirY            float32 `json:"damage_direction_y"`
+	DmgDirZ            float32 `json:"damage_direction_z"`
+	NumberPenetrations int     `json:"number_penetrations"`
+	IsNoScope          bool    `json:"is_no_scope_bullet"`
+	IsAttInAir         bool    `json:"is_attacker_in_air"`
+}
+
+type BombDefuseAbort struct {
+	PlayerAbortedSteamId uint64
+	PayerAbortedName     string
+	Position             Position
+}
+
+type BombDefuseStarted struct {
+	PlayerStartedSteamId uint64
+	PlayerStartedName    uint64
+	Position             Position
+	Kit                  bool
+}
+
+type BombDrop struct {
+	PlayerDropSteamId uint64
+	PlayerDropName    string
+	Position          Position
+}
+
+type BombPickedUp struct {
+	PlayerPickedUpSteamId uint64
+	PlayerPickUpName      string
+	Position              Position
+}
+
+type PlantAborted struct {
+	PlayerAbortPlantSteamId uint64
+	PlayerAbortPlantName    string
+	Position                Position
+}
+
+type PlantBegin struct {
+}
+
+type Planted struct {
+}
+
+type NadeEvent struct {
+	NadeType      WeaponType
+	Nade          *common.Equipment
+	Position      Position
+	ThowerSteamId uint64
+	ThowerName    string
+	NadeEntityId  int
+}
+
+type DecoyDone struct {
+	Event *NadeEvent
+}
+
+type DecoyStarted struct {
+	Event *NadeEvent
+}
+
+type FireNadeStart struct {
+	Event *NadeEvent
+}
+
+type FireNadeEnd struct {
+	Event *NadeEvent
+}
+
+type FlashBoom struct {
+	Event *NadeEvent
+}
+
+type NadeBoom struct {
+	Event *NadeEvent
 }
 
 // What are the poperties of a player?
@@ -88,6 +195,8 @@ type Velocityy struct {
 // I will be preprcessing the rounds into bins
 // since I am processing the tick individually
 type RoundInfo struct {
+	Start_tick     int `json:"start_tick"`
+	End_tick       int `json:"end_tick"`
 	Round_number   int `json:"round_number"`
 	TScore         int `json:"t_score"`
 	CTScore        int `json:"ct_score"`
