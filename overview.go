@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/golang/geo/r3"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
 )
 
@@ -18,6 +19,8 @@ type RoundCap interface {
 type Match struct {
 	Rounds       []RoundInfo
 	CurrentRound *RoundInfo
+	openRound    bool
+	Players      map[uint64]PlayerStats
 }
 
 type Tick struct {
@@ -32,11 +35,28 @@ type Tick struct {
 	Nades          []Nades                 `json:"nades"`
 	WeaponFired    []Weaps_fired           `json:"weapons_fired"`
 	PlayersHurt    []PlayerHurt            `json:"players_hurt"`
+	DefuseStart    []BombDefuseStarted     `json:"defuse_started"`
+	DefuseAbort    []BombDefuseAbort       `json:"bomb_defuse_abort"`
+	BombaDropped   []BombDrop              `json:"bomb_dropped"`
+	BombPickUp     []BombPickedUp          `json:"bomb_picked_up"`
+	PlantBegin     []PlantBegin
+	PlantAborted   []PlantAborted
+	Planted        []Planted
+	DecoyStarted   []DecoyStarted
+	DecoyDone      []DecoyDone
+	FireNadeStart  []FireNadeStart
+	FireNadeEnd    []FireNadeEnd
+	FlashBoom      []FlashBoom
+	NadeBoom       []NadeBoom
 }
 
 type Weaps_fired struct {
-	PlayerShot *common.Player
-	Weap       *common.Equipment
+	PlayerSteamIDFired uint64     `json:"player_fired_steam_id"`
+	PlayerNameFired    string     `json:"player_name_fired"`
+	WeaponFired        WeaponType `json:"weapons_fired"`
+	WeaponFiredString  string     `json:"weapon_fired_string"`
+	TickNumWeap        int        `json:"-"` //interal only.
+	Position           Position
 }
 
 type PlayerHurt struct {
@@ -53,6 +73,7 @@ type PlayerHurt struct {
 	HealthDamageTaken int        `json:"health_dmg_taken"` // Actual health damage (after overkill)
 	ArmorDamageTaken  int        `json:"armor_dmg_taken"`  // Actual armor damage (after overkill)
 	HitGroup          HitGroup   `json:"hit_group"`        // Body part that was hit
+	TickNum           int        `json:"-"`                //for internal purposes only
 }
 
 type Bullet_dmg struct {
@@ -73,11 +94,12 @@ type BombDefuseAbort struct {
 	PlayerAbortedSteamId uint64
 	PayerAbortedName     string
 	Position             Position
+	TickNum              int
 }
 
 type BombDefuseStarted struct {
 	PlayerStartedSteamId uint64
-	PlayerStartedName    uint64
+	PlayerStartedName    string
 	Position             Position
 	Kit                  bool
 }
@@ -101,15 +123,24 @@ type PlantAborted struct {
 }
 
 type PlantBegin struct {
+	PlayerBeginPlantSteamId uint64
+	PlayerBeginPlantName    string
+	Position                Position
+	TickNum                 int
 }
 
 type Planted struct {
+	PlayerPlantedSteamId uint64
+	PlayerPlantedName    string
+	Position             Position
+	TickNum              int
+	Site                 Bombsite
 }
 
 type NadeEvent struct {
 	NadeType      WeaponType
 	Nade          *common.Equipment
-	Position      Position
+	Position      r3.Vector
 	ThowerSteamId uint64
 	ThowerName    string
 	NadeEntityId  int
@@ -179,6 +210,40 @@ type Player_info struct {
 	DecoyN                int8                      `json:"num_decoys"`
 }
 
+type RoundKill struct {
+	TimeOfKill time.Duration
+	Tick       int
+
+	Weapon WeaponType
+
+	VictimSteamID   uint64
+	VictimName      string
+	VictimX         float64
+	VictimY         float64
+	VictimViewX     float32
+	VictimViewY     float32
+	VictimIsFlashed bool
+
+	KillerSteamID   uint64
+	KillerName      string
+	KillerHealth    int
+	KillerX         float64
+	KillerY         float64
+	KillerViewX     float32
+	KillerViewY     float32
+	KillerIsFlashed bool
+
+	AssistorSteamID uint64
+	AssistorName    string
+
+	IsOpeing        bool
+	IsHeadshot      bool
+	IsWallbang      bool
+	IsNoScope       bool
+	IsThroughtSmoke bool
+	IsAssistFlash   bool
+}
+
 type Position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -195,18 +260,94 @@ type Velocityy struct {
 // I will be preprcessing the rounds into bins
 // since I am processing the tick individually
 type RoundInfo struct {
-	Start_tick     int `json:"start_tick"`
-	End_tick       int `json:"end_tick"`
-	Round_number   int `json:"round_number"`
-	TScore         int `json:"t_score"`
-	CTScore        int `json:"ct_score"`
+	Start_tick   int `json:"start_tick"`
+	End_tick     int `json:"end_tick"`
+	Round_number int `json:"round_number"`
+	TimeStart    time.Duration
+	TimeEnd      time.Duration
+
+	TScore  int `json:"t_score"`
+	CTScore int `json:"ct_score"`
+
 	CTEcon         int `json:"ct_econ"` //Raw money
 	TEcon          int `json:"t_econ"`
 	CTEquipmentVal int `json:"ct_equipment_val"` //Value of equipment
 	TEquipmentVal  int `json:"t_equipment_val"`
+	TypeOfBuyCT    string
+	TypeOfBuyT     string
+
+	FirstKillCount int
+	SuvivorsCT     []uint64
+	SurvivorsT     []uint64
+
+	BombPlanted      bool
+	PlayerPlanted    string
+	BombPlantedSite  string
+	RoundEndedReason string
+
+	PlayersAliveCT map[uint64]bool
+	PlayerAliveT   map[uint64]bool
+	OneVX          bool
+	OneVXCount     int
+
+	Kills map[int]RoundKill
 
 	Ticks []Tick
 	//Get more Later concept for now
+}
+
+type PlayerStats struct {
+	Username string
+	SteamId  uint64
+
+	ImpactPreRound      float64
+	Kills               int
+	Deaths              int
+	Assists             int
+	HS                  int
+	HeadshotPercent     float64
+	ADR                 float64
+	KAST                float64
+	KDRatio             float64
+	FirstKill           int
+	FirstDeath          int
+	FKDiff              int
+	Round2k             int
+	Round3k             int
+	Round4k             int
+	Round5k             int
+	TotalDmg            int
+	TradeKills          int
+	TradeDeaths         int
+	CTKills             int
+	TKills              int
+	EffectiveFlashes    int
+	AvgFlashDuration    int
+	WeaponKills         map[WeaponType]int
+	WeaponKillsHeadshot map[WeaponType]int
+	AvgDist             float64
+	TotalDist           float64
+	FlashesThrown       int
+	TotalUtilDamage     int
+	AvgKillRnd          float64
+	AvgDeathsRnd        float64
+	AvgAssistsRnd       float64
+	AvgNadeDmg          float64
+	AvgInferDmg         float64
+	RoundsSurvived      int
+	RoundTraded         int
+	RoundContrid        []int
+	InfernoDmg          int
+	NadeDmg             int
+	OpeningPercent      float64
+	OpeningAttpPercent  float64
+	OpeningRoundsWon    int
+	OpeningWinPercent   float64
+	OneVsOne            int
+	OneVsTwo            int
+	OneVsThree          int
+	OneVsFour           int
+	OneVsFive           int
 }
 
 type Nades struct {

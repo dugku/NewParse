@@ -16,7 +16,7 @@ func get_rounds_info(gs demoinfocs.GameState, tick *Tick) Tick {
 	return *tick
 }
 
-func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match, c *int) {
+func round_start_end(p demoinfocs.Parser, m *Match, c *int) {
 	var (
 		tScore    int
 		ctScore   int
@@ -25,7 +25,7 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match, c *int) {
 	m.CurrentRound = &RoundInfo{}
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
-		*open_round = true
+		m.openRound = true
 		//this is messy wtf will refactor later if I don't forget since it will be messier later
 		gs := p.GameState()
 		if gs != nil {
@@ -59,7 +59,7 @@ func round_start_end(p demoinfocs.Parser, open_round *bool, m *Match, c *int) {
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		*open_round = false
+		m.openRound = false
 		gs := p.GameState()
 		if gs != nil {
 			m.CurrentRound.End_tick = gs.IngameTick()
