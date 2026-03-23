@@ -48,6 +48,8 @@ func parser_start(path string, m *Match) error {
 	players_hurting(p, m, &cur_tick)
 	weapons_firing(p, m, &cur_tick)
 	bomb_handeler(p, m, &cur_tick)
+	nades(m, p, &cur_tick)
+	nade_handler(p, m, &cur_tick)
 	//nade_handler(p, m, &cur_tick)
 	for {
 		more, err := p.ParseNextFrame()
@@ -69,28 +71,11 @@ func parser_start(path string, m *Match) error {
 				Tick_number: cur_tick,
 				Time_in_sec: 0,
 
-				Players:       make(map[uint64]*Player_info, 10),
-				Nades:         make([]Nades, 0),
-				PlayersHurt:   make([]PlayerHurt, 0),
-				WeaponFired:   make([]Weaps_fired, 0),
-				PlantBegin:    make([]PlantBegin, 0),
-				PlantAborted:  make([]PlantAborted, 0),
-				Planted:       make([]Planted, 0),
-				BombPickUp:    make([]BombPickedUp, 0),
-				BombaDropped:  make([]BombDrop, 0),
-				DefuseStart:   make([]BombDefuseStarted, 0),
-				DefuseAbort:   make([]BombDefuseAbort, 0),
-				DecoyStarted:  make([]DecoyStarted, 0),
-				DecoyDone:     make([]DecoyDone, 0),
-				FireNadeStart: make([]FireNadeStart, 0),
-				FireNadeEnd:   make([]FireNadeEnd, 0),
-				FlashBoom:     make([]FlashBoom, 0),
-				NadeBoom:      make([]NadeBoom, 0),
+				Players: make(map[uint64]*Player_info, 10),
 			}
 			if gs != nil {
 
 				test_players(gs, &tick_current)
-				nades(gs, &tick_current, p)
 				if m == nil {
 					log.Println("Sink is nil not good")
 				} else {
@@ -108,26 +93,24 @@ func frame(m *Match) {
 	fmt.Println("Here")
 	rounds := m.Rounds
 
-	for _, i := range rounds {
-		for _, j := range i.Ticks {
-			if len(j.Nades) == 0 {
-				continue
-			}
-			fmt.Println(j.Nades)
-		}
-
-	}
+	fmt.Println(rounds)
 }
 
 func main() {
-	var m Match
-	m = Match{
-		Rounds:       make([]RoundInfo, 0),
-		CurrentRound: &RoundInfo{},
-		Players:      map[uint64]PlayerStats{},
+	m := Match{
+		Rounds: make([]RoundInfo, 0),
+
+		// FIX: Remove the '&'. Initialize as a struct value.
+		CurrentRound: &RoundInfo{
+			Kills: make(map[int]RoundKill),
+		},
+
+		Players: map[uint64]PlayerStats{},
 	}
-	parser_start("furia-vs-mouz-m2-overpass.dem", &m)
 
+	err := parser_start("vitality-vs-the-mongolz-m1-mirage.dem", &m)
+	fmt.Println(err)
+
+	// Assuming frame takes a pointer
 	frame(&m)
-
 }

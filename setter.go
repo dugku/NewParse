@@ -98,6 +98,6 @@ func stat_setter(c []*common.Player, m *Match, gs demoinfocs.GameState) {
 		player.Deaths = c[i].Deaths()
 		player.Assists = c[i].Assists()
 		player.TotalDmg = c[i].TotalDamage()
-		player.ADR = calc_adr(gs, player.TotalDmg)
+		//		player.ADR = calc_adr(gs, player.TotalDmg)
 	}
 }

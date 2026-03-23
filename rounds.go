@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
@@ -22,7 +24,6 @@ func round_start_end(p demoinfocs.Parser, m *Match, c *int) {
 		ctScore   int
 		round_num int
 	)
-	m.CurrentRound = &RoundInfo{}
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		m.openRound = true
@@ -45,6 +46,7 @@ func round_start_end(p demoinfocs.Parser, m *Match, c *int) {
 			for _, p := range gs.Participants().TeamMembers(common.TeamTerrorists) {
 				tMoney += p.Money()
 			}
+			fmt.Println(ctScore, tScore)
 			m.CurrentRound.Start_tick = gs.IngameTick()
 			m.CurrentRound.CTEcon = ctMoney
 			m.CurrentRound.TEcon = tMoney
@@ -67,6 +69,10 @@ func round_start_end(p demoinfocs.Parser, m *Match, c *int) {
 		}
 		m.StoreRoundInfo(round_num, *m.CurrentRound)
 		*c += 1
+
+		m.CurrentRound = &RoundInfo{
+			Kills: make(map[int]RoundKill),
+		}
 	})
 
 }

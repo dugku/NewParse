@@ -20,19 +20,14 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			start.Kit = e.HasKit
+			start.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			start.PlayerStartedName = "Unknown"
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.DefuseStart = append(current.DefuseStart, start)
-			} else {
-				// Create a new tick if needed, or add to the most recent one
-				current.DefuseStart = append(current.DefuseStart, start)
-			}
-		}
+		m.CurrentRound.DefuseStart = append(m.CurrentRound.DefuseStart, start)
+
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefuseAborted) {
@@ -47,20 +42,15 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			abort.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			abort.PayerAbortedName = "Unknown"
 		}
 
 		abort.TickNum = p.GameState().IngameTick()
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.DefuseAbort = append(current.DefuseAbort, abort)
-			} else {
-				current.DefuseAbort = append(current.DefuseAbort, abort)
-			}
-		}
+		m.CurrentRound.DefuseAbort = append(m.CurrentRound.DefuseAbort, abort)
+
 	})
 
 	p.RegisterEventHandler(func(e events.BombDropped) {
@@ -74,16 +64,13 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			dropped.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			dropped.PlayerDropName = "Uknown"
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.BombaDropped = append(current.BombaDropped, dropped)
-			}
-		}
+		m.CurrentRound.BombaDropped = append(m.CurrentRound.BombaDropped, dropped)
+
 	})
 
 	p.RegisterEventHandler(func(e events.BombPickup) {
@@ -97,16 +84,12 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			picked.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			picked.PlayerPickUpName = "Uknown"
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.BombPickUp = append(current.BombPickUp, picked)
-			}
-		}
+		m.CurrentRound.BombPickUp = append(m.CurrentRound.BombPickUp, picked)
 
 	})
 
@@ -126,6 +109,7 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			planted.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			planted.PlayerPlantedName = "Unknown"
 		}
@@ -145,14 +129,8 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 			}
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.Planted = append(current.Planted, planted)
-			} else {
-				current.Planted = append(current.Planted, planted)
-			}
-		}
+		m.CurrentRound.Planted = append(m.CurrentRound.Planted, planted)
+
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlantAborted) {
@@ -171,18 +149,13 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			plantAbort.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			plantAbort.PlayerAbortPlantName = "Unknown"
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.PlantAborted = append(current.PlantAborted, plantAbort)
-			} else {
-				current.PlantAborted = append(current.PlantAborted, plantAbort)
-			}
-		}
+		m.CurrentRound.PlantAborted = append(m.CurrentRound.PlantAborted, plantAbort)
+
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlantBegin) {
@@ -201,6 +174,7 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 				Y: e.Player.Position().Y,
 				Z: e.Player.Position().Z,
 			}
+			plantBegin.TimeSec = int(p.CurrentTime().Seconds())
 		} else {
 			plantBegin.PlayerBeginPlantName = "Unknown"
 		}
@@ -210,14 +184,8 @@ func bomb_handeler(p demoinfocs.Parser, m *Match, cTick *int) {
 			plantBegin.TickNum = gs.IngameTick()
 		}
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *cTick {
-				current.PlantBegin = append(current.PlantBegin, plantBegin)
-			} else {
-				current.PlantBegin = append(current.PlantBegin, plantBegin)
-			}
-		}
+		m.CurrentRound.PlantBegin = append(m.CurrentRound.PlantBegin, plantBegin)
+
 	})
 
 }

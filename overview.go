@@ -32,22 +32,6 @@ type Tick struct {
 	IsMatchStarted bool                    `json:"is_match_started"`
 	GamePhase      string                  `json:"game_phase"`
 	Players        map[uint64]*Player_info `json:"players"`
-	Nades          []Nades                 `json:"nades"`
-	WeaponFired    []Weaps_fired           `json:"weapons_fired"`
-	PlayersHurt    []PlayerHurt            `json:"players_hurt"`
-	DefuseStart    []BombDefuseStarted     `json:"defuse_started"`
-	DefuseAbort    []BombDefuseAbort       `json:"bomb_defuse_abort"`
-	BombaDropped   []BombDrop              `json:"bomb_dropped"`
-	BombPickUp     []BombPickedUp          `json:"bomb_picked_up"`
-	PlantBegin     []PlantBegin
-	PlantAborted   []PlantAborted
-	Planted        []Planted
-	DecoyStarted   []DecoyStarted
-	DecoyDone      []DecoyDone
-	FireNadeStart  []FireNadeStart
-	FireNadeEnd    []FireNadeEnd
-	FlashBoom      []FlashBoom
-	NadeBoom       []NadeBoom
 }
 
 type Weaps_fired struct {
@@ -95,6 +79,7 @@ type BombDefuseAbort struct {
 	PayerAbortedName     string
 	Position             Position
 	TickNum              int
+	TimeSec              int
 }
 
 type BombDefuseStarted struct {
@@ -102,24 +87,28 @@ type BombDefuseStarted struct {
 	PlayerStartedName    string
 	Position             Position
 	Kit                  bool
+	TimeSec              int
 }
 
 type BombDrop struct {
 	PlayerDropSteamId uint64
 	PlayerDropName    string
 	Position          Position
+	TimeSec           int
 }
 
 type BombPickedUp struct {
 	PlayerPickedUpSteamId uint64
 	PlayerPickUpName      string
 	Position              Position
+	TimeSec               int
 }
 
 type PlantAborted struct {
 	PlayerAbortPlantSteamId uint64
 	PlayerAbortPlantName    string
 	Position                Position
+	TimeSec                 int
 }
 
 type PlantBegin struct {
@@ -127,6 +116,7 @@ type PlantBegin struct {
 	PlayerBeginPlantName    string
 	Position                Position
 	TickNum                 int
+	TimeSec                 int
 }
 
 type Planted struct {
@@ -135,6 +125,7 @@ type Planted struct {
 	Position             Position
 	TickNum              int
 	Site                 Bombsite
+	TimeSec              int
 }
 
 type NadeEvent struct {
@@ -144,6 +135,7 @@ type NadeEvent struct {
 	ThowerSteamId uint64
 	ThowerName    string
 	NadeEntityId  int
+	TimeInSec     int
 }
 
 type DecoyDone struct {
@@ -172,42 +164,42 @@ type NadeBoom struct {
 
 // What are the poperties of a player?
 type Player_info struct {
-	Name                  string                    `json:"name"`
-	Inventory             map[int]*common.Equipment `json:"inventory"`
-	Money                 int                       `json:"money"`
-	Health                int                       `json:"health"`
-	Armor                 int                       `json:"armor"`
-	IsAlive               bool                      `json:"is_alive"`
-	Team                  common.Team               `json:"team"`
-	Entity_id             int                       `json:"entity_id"`
-	Defusing              bool                      `json:"defusing"`
-	HasHel                bool                      `json:"has_helmet"`
-	Position              Position                  `json:"position_pl"`
-	ActiveWeapon          *common.Equipment         `json:"active_weapon"`
-	ActiveWeaponName      string                    `json:"active_weapon_name"`
-	AmmoInMag             int                       `json:"ammo_in_mag"`
-	AmmoInRes             int                       `json:"ammo_in_res" `
-	FlashDurTime          time.Duration             `json:"flash_dur_time"`
-	FlashDurTimeRemaining time.Duration             `json:"flash_dur_time_remaining"`
-	HasKit                bool                      `json:"has_defuse_kit"`
-	IsInAir               bool                      `json:"air_borne"`
-	IsBlind               bool                      `json:"is_blinded"`
-	InBombZone            bool                      `json:"in_bomb_zone"`
-	InBuyZone             bool                      `json:"in_buy_zone"`
-	IsScoped              bool                      `json:"is_scoped"`
-	Standing              bool                      `json:"is_standing"`
-	UnDuckingInProgress   bool                      `json:"un_ducking_in_prog"`
-	Walking               bool                      `json:"is_walking"`
-	LastPlace             string                    `json:"last_place_name"`
-	ViewDirX              float32                   `json:"view_dir_x"`
-	ViewDirY              float32                   `json:"view_dir_y"`
-	Ducked                bool                      `json:"is_ducking"`
-	FlashN                int8                      `json:"num_flashes"`
-	NadeN                 int8                      `json:"num_nades"`
-	SmokeN                int8                      `json:"num_smokes"`
-	MollyN                int8                      `json:"num_mollies"`
-	IncendiaryN           int8                      `json:"num_incindiary"`
-	DecoyN                int8                      `json:"num_decoys"`
+	Name                  string             `json:"name"`
+	Inventory             map[int]WeaponType `json:"-"`
+	Money                 int                `json:"money"`
+	Health                int                `json:"health"`
+	Armor                 int                `json:"armor"`
+	IsAlive               bool               `json:"is_alive"`
+	Team                  common.Team        `json:"team"`
+	Entity_id             int                `json:"entity_id"`
+	Defusing              bool               `json:"defusing"`
+	HasHel                bool               `json:"has_helmet"`
+	Position              Position           `json:"position_pl"`
+	ActiveWeapon          WeaponType         `json:"active_weapon"`
+	ActiveWeaponName      string             `json:"active_weapon_name"`
+	AmmoInMag             int                `json:"ammo_in_mag"`
+	AmmoInRes             int                `json:"ammo_in_res" `
+	FlashDurTime          time.Duration      `json:"flash_dur_time"`
+	FlashDurTimeRemaining time.Duration      `json:"flash_dur_time_remaining"`
+	HasKit                bool               `json:"has_defuse_kit"`
+	IsInAir               bool               `json:"air_borne"`
+	IsBlind               bool               `json:"is_blinded"`
+	InBombZone            bool               `json:"in_bomb_zone"`
+	InBuyZone             bool               `json:"in_buy_zone"`
+	IsScoped              bool               `json:"is_scoped"`
+	Standing              bool               `json:"is_standing"`
+	UnDuckingInProgress   bool               `json:"un_ducking_in_prog"`
+	Walking               bool               `json:"is_walking"`
+	LastPlace             string             `json:"last_place_name"`
+	ViewDirX              float32            `json:"view_dir_x"`
+	ViewDirY              float32            `json:"view_dir_y"`
+	Ducked                bool               `json:"is_ducking"`
+	FlashN                int8               `json:"num_flashes"`
+	NadeN                 int8               `json:"num_nades"`
+	SmokeN                int8               `json:"num_smokes"`
+	MollyN                int8               `json:"num_mollies"`
+	IncendiaryN           int8               `json:"num_incindiary"`
+	DecoyN                int8               `json:"num_decoys"`
 }
 
 type RoundKill struct {
@@ -293,6 +285,23 @@ type RoundInfo struct {
 	Kills map[int]RoundKill
 
 	Ticks []Tick
+
+	Nades         []Nades             `json:"nades"`
+	WeaponFired   []Weaps_fired       `json:"weapons_fired"`
+	PlayersHurt   []PlayerHurt        `json:"players_hurt"`
+	DefuseStart   []BombDefuseStarted `json:"defuse_started"`
+	DefuseAbort   []BombDefuseAbort   `json:"bomb_defuse_abort"`
+	BombaDropped  []BombDrop          `json:"bomb_dropped"`
+	BombPickUp    []BombPickedUp      `json:"bomb_picked_up"`
+	PlantBegin    []PlantBegin
+	PlantAborted  []PlantAborted
+	Planted       []Planted
+	DecoyStarted  []DecoyStarted
+	DecoyDone     []DecoyDone
+	FireNadeStart []FireNadeStart
+	FireNadeEnd   []FireNadeEnd
+	FlashBoom     []FlashBoom
+	NadeBoom      []NadeBoom
 	//Get more Later concept for now
 }
 

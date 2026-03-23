@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
@@ -44,7 +45,7 @@ func set_player(players []*common.Player, tick *Tick, gs demoinfocs.GameState) {
 		}
 		tick.Players[p.SteamID64] = &Player_info{
 			Name:      p.Name,
-			Inventory: make(map[int]*common.Equipment),
+			Inventory: make(map[int]WeaponType),
 			Money:     p.Money(),
 			Health:    p.Health(),
 			Armor:     p.Armor(),
@@ -58,7 +59,7 @@ func set_player(players []*common.Player, tick *Tick, gs demoinfocs.GameState) {
 				Y: p.Position().Y,
 				Z: p.Position().Z,
 			},
-			ActiveWeapon:          p.ActiveWeapon(),
+			ActiveWeapon:          weaponTypeFromEquipment(p.ActiveWeapon()),
 			ActiveWeaponName:      p.ActiveWeapon().OriginalString,
 			AmmoInMag:             p.ActiveWeapon().AmmoInMagazine(),
 			AmmoInRes:             p.ActiveWeapon().AmmoReserve(),
@@ -84,7 +85,7 @@ func set_player(players []*common.Player, tick *Tick, gs demoinfocs.GameState) {
 		}
 
 		for i, item := range p.Weapons() {
-			tick.Players[p.SteamID64].Inventory[i] = item
+			tick.Players[p.SteamID64].Inventory[i] = weaponTypeFromEquipment(item)
 		}
 
 		for _, item := range p.Weapons() {
@@ -157,11 +158,8 @@ func players_hurting(p demoinfocs.Parser, m *Match, curT *int) {
 		hurt.HitGroup = HitGroup(e.HitGroup)
 		hurt.TickNum = *curT
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *curT {
-				current.PlayersHurt = append(current.PlayersHurt, hurt)
-			}
+		if len(m.CurrentRound.PlayersHurt) > 0 {
+			m.CurrentRound.PlayersHurt = append(m.CurrentRound.PlayersHurt, hurt)
 		}
 
 	})
@@ -196,11 +194,8 @@ func weapons_firing(p demoinfocs.Parser, m *Match, curT *int) {
 
 		fired.TickNumWeap = *curT
 
-		if len(m.CurrentRound.Ticks) > 0 {
-			current := &m.CurrentRound.Ticks[len(m.CurrentRound.Ticks)-1]
-			if current.Tick_number == *curT {
-				current.WeaponFired = append(current.WeaponFired, fired)
-			}
+		if len(m.CurrentRound.WeaponFired) > 0 {
+			m.CurrentRound.WeaponFired = append(m.CurrentRound.WeaponFired, fired)
 		}
 	})
 }
@@ -208,7 +203,6 @@ func weapons_firing(p demoinfocs.Parser, m *Match, curT *int) {
 func kill_logic(p demoinfocs.Parser, m *Match) {
 	current := &m.CurrentRound
 	gs := p.GameState()
-
 	if gs == nil {
 		log.Println("GameState is nil somehow")
 	}
@@ -227,8 +221,10 @@ func kill_logic(p demoinfocs.Parser, m *Match) {
 		}
 
 		var assistor string
+		var assistor_id uint64
 		if e.Assister != nil {
 			assistor = e.Assister.Name
+			assistor_id = e.Assister.SteamID64
 		}
 		open_kill := false
 		if current != nil {
@@ -240,7 +236,12 @@ func kill_logic(p demoinfocs.Parser, m *Match) {
 				open_kill = false
 			}
 
+			if m.CurrentRound.Kills == nil {
+				m.CurrentRound.Kills = make(map[int]RoundKill)
+			}
+
 			if _, exists := m.CurrentRound.Kills[count]; exists {
+				fmt.Println("Here")
 				return
 			} else {
 				m.CurrentRound.Kills[count] = RoundKill{
@@ -266,7 +267,7 @@ func kill_logic(p demoinfocs.Parser, m *Match) {
 					KillerViewY:     e.Killer.ViewDirectionY(),
 					KillerIsFlashed: e.Killer.IsBlinded(),
 
-					AssistorSteamID: e.Assister.SteamID64,
+					AssistorSteamID: assistor_id,
 					AssistorName:    assistor,
 
 					IsOpeing:        open_kill,
