@@ -21,11 +21,13 @@ type Match struct {
 	CurrentRound *RoundInfo
 	openRound    bool
 	Players      map[uint64]PlayerStats
+	MapName      string // captured from ServerInfo
 }
 
 type Tick struct {
-	Tick_number int     `json:"tick_number"`
-	Time_in_sec float32 `json:"time_in_sec"`
+	Tick_number   int     `json:"tick_number"`
+	Time_in_sec   float32 `json:"time_in_sec"`
+	TimeRemaining float32 `json:"time_remaining"` // seconds left in round — needed for WPA
 
 	IsFreezetime   bool                    `json:"is_freezetime"`
 	IsWarmup       bool                    `json:"is_warmup"`
@@ -39,7 +41,7 @@ type Weaps_fired struct {
 	PlayerNameFired    string     `json:"player_name_fired"`
 	WeaponFired        WeaponType `json:"weapons_fired"`
 	WeaponFiredString  string     `json:"weapon_fired_string"`
-	TickNumWeap        int        `json:"-"` //interal only.
+	TickNumWeap        int        `json:"-"` // internal only
 	Position           Position
 }
 
@@ -52,12 +54,12 @@ type PlayerHurt struct {
 	Armor             int        `json:"armor"`
 	Weapon            WeaponType `json:"weapon"`
 	WeaponString      string     `json:"weapon_string"`
-	HealthDamage      int        `json:"health_dmg"`       // Raw health damage before overkill
-	ArmorDamage       int        `json:"armor_dmg"`        // Raw armor damage before overkill
-	HealthDamageTaken int        `json:"health_dmg_taken"` // Actual health damage (after overkill)
-	ArmorDamageTaken  int        `json:"armor_dmg_taken"`  // Actual armor damage (after overkill)
-	HitGroup          HitGroup   `json:"hit_group"`        // Body part that was hit
-	TickNum           int        `json:"-"`                //for internal purposes only
+	HealthDamage      int        `json:"health_dmg"`
+	ArmorDamage       int        `json:"armor_dmg"`
+	HealthDamageTaken int        `json:"health_dmg_taken"`
+	ArmorDamageTaken  int        `json:"armor_dmg_taken"`
+	HitGroup          HitGroup   `json:"hit_group"`
+	TickNum           int        `json:"-"`
 }
 
 type Bullet_dmg struct {
@@ -162,7 +164,6 @@ type NadeBoom struct {
 	Event *NadeEvent
 }
 
-// What are the poperties of a player?
 type Player_info struct {
 	Name                  string             `json:"name"`
 	Inventory             map[int]WeaponType `json:"-"`
@@ -178,7 +179,7 @@ type Player_info struct {
 	ActiveWeapon          WeaponType         `json:"active_weapon"`
 	ActiveWeaponName      string             `json:"active_weapon_name"`
 	AmmoInMag             int                `json:"ammo_in_mag"`
-	AmmoInRes             int                `json:"ammo_in_res" `
+	AmmoInRes             int                `json:"ammo_in_res"`
 	FlashDurTime          time.Duration      `json:"flash_dur_time"`
 	FlashDurTimeRemaining time.Duration      `json:"flash_dur_time_remaining"`
 	HasKit                bool               `json:"has_defuse_kit"`
@@ -248,9 +249,6 @@ type Velocityy struct {
 	VZ float64
 }
 
-// Will need to really think about this since
-// I will be preprcessing the rounds into bins
-// since I am processing the tick individually
 type RoundInfo struct {
 	Start_tick   int `json:"start_tick"`
 	End_tick     int `json:"end_tick"`
@@ -261,9 +259,14 @@ type RoundInfo struct {
 	TScore  int `json:"t_score"`
 	CTScore int `json:"ct_score"`
 
-	CTEcon         int `json:"ct_econ"` //Raw money
+	// CTWin is the WPA label: 1=CT won, 0=T won, -1=unknown
+	// Backfill this to every tick in the round during Python aggregation
+	CTWin            int    `json:"ct_win"`
+	RoundEndedReason string `json:"round_ended_reason"`
+
+	CTEcon         int `json:"ct_econ"`
 	TEcon          int `json:"t_econ"`
-	CTEquipmentVal int `json:"ct_equipment_val"` //Value of equipment
+	CTEquipmentVal int `json:"ct_equipment_val"`
 	TEquipmentVal  int `json:"t_equipment_val"`
 	TypeOfBuyCT    string
 	TypeOfBuyT     string
@@ -272,10 +275,9 @@ type RoundInfo struct {
 	SuvivorsCT     []uint64
 	SurvivorsT     []uint64
 
-	BombPlanted      bool
-	PlayerPlanted    string
-	BombPlantedSite  string
-	RoundEndedReason string
+	BombPlanted     bool
+	PlayerPlanted   string
+	BombPlantedSite string
 
 	PlayersAliveCT map[uint64]bool
 	PlayerAliveT   map[uint64]bool
@@ -302,7 +304,6 @@ type RoundInfo struct {
 	FireNadeEnd   []FireNadeEnd
 	FlashBoom     []FlashBoom
 	NadeBoom      []NadeBoom
-	//Get more Later concept for now
 }
 
 type PlayerStats struct {
@@ -364,10 +365,6 @@ type Nades struct {
 	Type      *common.Equipment
 	Pos       Position
 	TimeInSec time.Duration
-	//Vel       Velocityy
 }
 
-type DmgDone struct {
-}
-
-// More structs can be added here to hold additional information as needed
+type DmgDone struct{}

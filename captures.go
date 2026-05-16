@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"strconv"
+	"path/filepath"
+	"strings"
 )
 
 func (s *Match) CaptureFrame(t Tick) {
@@ -29,31 +30,47 @@ func (m *Match) SeeFrame(t Tick) {
 }
 
 func (m *Match) StoreRoundInfo(round int, info RoundInfo) {
-	//wirte current round
-	m.WriteRound(info)
 	m.Rounds = append(m.Rounds, info)
 }
 
-func (m *Match) WriteRound(round RoundInfo) {
-	//write to json
-	json_data, err := json.MarshalIndent(round, "", " ")
-	if err != nil {
-		log.Println("Error marshalling to JSON:", err)
-		return
+// MatchOutput is the top-level JSON structure written once per demo.
+type MatchOutput struct {
+	Demo   string      `json:"demo"`
+	Map    string      `json:"map"`
+	Rounds []RoundInfo `json:"rounds"`
+}
+
+// WriteMatch writes the entire match to a single JSON file once parsing is done.
+// demoPath is the original .dem file path — used to derive the output filename.
+func (m *Match) WriteMatch(demoPath string) error {
+	// Derive a clean filename from the demo path:
+	// e.g. "parivision-vs-g2-m2-dust2.dem" → "parivision-vs-g2-m2-dust2.json"
+	base := filepath.Base(demoPath)
+	name := strings.TrimSuffix(base, filepath.Ext(base))
+	fileName := "./jsonFolder/" + name + ".json"
+
+	out := MatchOutput{
+		Demo:   name,
+		Map:    m.MapName,
+		Rounds: m.Rounds,
 	}
 
-	roundNum := strconv.Itoa(round.Round_number)
-	file_name := "round_" + roundNum + ".json"
-	err = writeFile(file_name, json_data)
+	data, err := json.Marshal(out) // No indent — saves significant space vs MarshalIndent
 	if err != nil {
-		log.Println("Error writing to file:", err)
-		return
+		return err
 	}
+
+	err = os.WriteFile(fileName, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Wrote %d rounds to %s (%.2f MB)", len(m.Rounds), fileName, float64(len(data))/(1024*1024))
+	return nil
 }
 
 func writeFile(filename string, data []byte) error {
-	err := os.WriteFile(filename, data, 0644)
-	return err
+	return os.WriteFile(filename, data, 0644)
 }
 
 func check(e error) {
