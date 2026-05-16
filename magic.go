@@ -1,6 +1,11 @@
 package main
 
-import "github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
+import (
+	"fmt"
+
+	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
+)
 
 type HitGroup int
 type WeaponType int
@@ -54,7 +59,6 @@ func (hg HitGroup) String() string {
 	}[hg]
 }
 
-// String returns the human-readable name of the weapon type
 func (wt WeaponType) String() string {
 	names := []string{
 		"Unknown",
@@ -150,5 +154,26 @@ func weaponTypeFromEquipment(eq *common.Equipment) WeaponType {
 
 	default:
 		return WeaponUnknown
+	}
+}
+
+func roundEndReasonString(r events.RoundEndReason) string {
+	switch r {
+	case events.RoundEndReasonCTWin:
+		return "ct_win"
+	case events.RoundEndReasonTerroristsWin:
+		return "t_win"
+	case events.RoundEndReasonBombDefused:
+		return "bomb_defused"
+	case events.RoundEndReasonTargetBombed:
+		return "bomb_exploded"
+	case events.RoundEndReasonCTSurrender:
+		return "ct_surrender"
+	case events.RoundEndReasonTerroristsSurrender:
+		return "t_surrender"
+	case events.RoundEndReasonTargetSaved:
+		return "target_saved"
+	default:
+		return fmt.Sprintf("unknown_%d", int(r))
 	}
 }
