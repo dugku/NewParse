@@ -87,7 +87,7 @@ func parser_start(path string, m *Match) error {
 }
 
 func main() {
-	demoPath := "parivision-vs-g2-m3-ancient.dem"
+	demoPath := "gamerlegion-vs-astralis-m2-ancient.dem"
 
 	m := Match{
 		Rounds: make([]RoundInfo, 0),
